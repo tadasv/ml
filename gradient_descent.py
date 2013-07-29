@@ -4,17 +4,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
-def linear_regression(coefficients, input_values):
-    """
-    Multivariate linear regression hypothesis function
-
-    h(X) = t0x0 + t1x1 + ... + tnxn
-
-    @param coefficients: list, T
-    @param input_values: list, X
-    """
-    n = len(coefficients)
-    return sum([coefficients[i] * input_values[i] for i in xrange(n)])
+from linear_regression import cost_derivative
+from linear_regression import hypothesis
 
 
 class GradientDescent(object):
@@ -26,7 +17,7 @@ class GradientDescent(object):
         self.rate = rate
         self.coef = None
         # Function to run gradient descent on
-        self.function = function or linear_regression
+        self.function = function
 
     def _done(self, deltas):
         n = len(deltas)
@@ -37,33 +28,24 @@ class GradientDescent(object):
         return self.function(self.coef, input_values)
 
     def fit(self, inputs, outputs):
-        num_inputs = len(inputs)
-        num_variables = len(inputs[0])
-        # Model parameters
-        self.coef = [0] * num_variables
-        # Step sizes
-        deltas = [0] * num_variables
-
+        num_variables = len(inputs)
         self.num_iter = 0
+        self.coef = [0] * num_variables
+
         while True:
             self.num_iter += 1
-            for j in xrange(num_variables):
-                # Cost function
-                s = 0
-                for i in xrange(num_inputs):
-                    s += (self.predict(inputs[i]) - outputs[i]) * inputs[i][j]
-                s = s * 1.0/(2*num_inputs)
-
-                # Steps
-                deltas[j] = self.rate * s
-                self.coef[j] = self.coef[j] - deltas[j]
+            thetas = cost_derivative(self.coef, inputs, outputs)
+            # Steps
+            deltas = [t * self.rate for t in thetas]
+            for i in xrange(len(deltas)):
+                self.coef[i] = self.coef[i] - deltas[i]
 
             if self._done(deltas):
                 return
 
 
 def test(inputs, outputs):
-    gd = GradientDescent()
+    gd = GradientDescent(function=hypothesis)
     errors = [0.00000001, 0.00001, 0.0001, 0.001, 0.01, 0.1]
     for error in errors:
         gd.error_threshold = error
