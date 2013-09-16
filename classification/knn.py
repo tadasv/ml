@@ -5,6 +5,7 @@ k nearest neighbours classifier
 
 import csv
 import numpy as np
+from random import choice
 from collections import defaultdict
 from operator import itemgetter
 
@@ -33,13 +34,25 @@ def load_data(input_indexes, output_index, filename, has_header=True):
     return np.array(inputs), outputs
 
 
-def classify(X, training_data, classes, k=3):
+def sample_indices(data, partition_size):
+    available_indices = range(len(data))
+    sample_indices = []
+
+    while len(sample_indices) != partition_size:
+        sample_idx = choice(available_indices)
+        sample_indices.append(sample_idx)
+        available_indices.pop(available_indices.index(sample_idx))
+
+    return sample_indices, available_indices
+
+
+def classify(X, data, classes, k=3):
     if not isinstance(X, np.ndarray):
         X = np.array(X)
 
     distances = []
-    for i, training_item in enumerate(training_data):
-        diff = X - training_item
+    for i, item in enumerate(data):
+        diff = X - item
         diff = diff ** 2
         d = sum(diff)
         distances.append((i, d))
@@ -63,7 +76,8 @@ def classify(X, training_data, classes, k=3):
     return predicted_class[0]
 
 
-inputs, outputs = load_data([0, 1], 4, "../data/iris.csv")
-import sys
-c = classify([float(x) for x in sys.argv[1:]], inputs, outputs)
-print "Class: " + c
+if __name__ == '__main__':
+    inputs, outputs = load_data([0, 1], 4, "../data/iris.csv")
+    import sys
+    c = classify([float(x) for x in sys.argv[1:]], inputs, outputs)
+    print "Class: " + c
